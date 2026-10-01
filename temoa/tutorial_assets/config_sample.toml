@@ -78,6 +78,8 @@ neos = false
 #  [appsi_highs, cbc, gurobi, cplex, ...]
 solver_name = "appsi_highs"
 
+# Solver-specific options and Gurobi MIP overrides are listed at the end of this file.
+
 # ------------------------------------
 #             OUTPUTS
 # select desired output products/files
@@ -218,3 +220,38 @@ activity_labels = []
 [monte_carlo]
 # a path from the PROJECT ROOT to the settings file that contains the run data.
 run_settings = 'mc_settings.csv'
+
+# ---------------------------------------------------
+#                SOLVER OPTIONS
+# These reproduce Temoa's solver defaults and may be edited by the user.
+# ---------------------------------------------------
+[solver_options.cbc]
+# No Temoa-specific CBC options are set by default.
+
+[solver_options.cplex]
+# Continuous solver defaults matching mip-dev / PyPSA:
+# https://pypsa-eur.readthedocs.io/en/latest/configuration.html
+lpmethod = 4                    # barrier
+solutiontype = 2                # non-basic solution; no crossover
+"barrier convergetol" = 1.0e-3
+"feasopt tolerance" = 1.0e-4
+
+[solver_options.gurobi]
+# Continuous LP defaults matching mip-dev / PyPSA:
+# https://pypsa-eur.readthedocs.io/en/latest/configuration.html
+Method = 2                      # barrier
+Crossover = 0                   # non-basic solution; no crossover
+BarConvTol = 1.0e-3
+FeasibilityTol = 1.0e-4
+BarOrder = -1                   # automatic ordering
+
+[solver_options.gurobi.mip]
+# Used instead of the continuous options above when Temoa detects integer variables.
+# Gurobi parameter reference:
+# https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html
+Method = -1                     # automatic root-relaxation method
+Crossover = -1                  # automatic crossover strategy
+MIPGap = 1.0e-4                 # Gurobi default: 0.01% relative optimality gap; user-adjustable
+
+[solver_options.appsi_highs]
+# No Temoa-specific APPSI HiGHS options are set by default.

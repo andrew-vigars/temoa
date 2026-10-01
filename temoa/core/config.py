@@ -72,6 +72,7 @@ class TemoaConfig:
         output_threshold_emission: float | None = None,
         output_threshold_cost: float | None = None,
         sqlite: dict[str, object] | None = None,
+        solver_options: dict[str, dict[str, object]] | None = None,
         extensions: list[str] | tuple[str, ...] | None = None,
     ):
         if '-' in scenario:
@@ -130,6 +131,16 @@ class TemoaConfig:
         if self.neos:
             raise NotImplementedError('Neos is currently not supported.')
         self.solver_name = solver_name
+        options_by_solver = solver_options or {}
+        selected_solver_options = options_by_solver.get(solver_name, {})
+        if not isinstance(selected_solver_options, dict):
+            raise TypeError(f'solver_options.{solver_name} must be a TOML table')
+        selected_solver_options = dict(selected_solver_options)
+        mip_solver_options = selected_solver_options.pop('mip', {})
+        if not isinstance(mip_solver_options, dict):
+            raise TypeError(f'solver_options.{solver_name}.mip must be a TOML table')
+        self.solver_options = selected_solver_options
+        self.mip_solver_options = dict(mip_solver_options)
 
         self.save_excel = save_excel
         self.save_duals = save_duals

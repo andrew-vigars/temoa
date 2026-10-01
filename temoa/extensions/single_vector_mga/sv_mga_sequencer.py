@@ -100,6 +100,8 @@ class SvMgaSequencer:
             solver_name=self.config.solver_name,
             silent=self.config.silent,
             solver_suffixes=suffixes,
+            solver_options=self.config.solver_options,
+            mip_solver_options=self.config.mip_solver_options,
         )
         status = res.solver.termination_condition
         logger.debug('Termination condition: %s', status.name)
@@ -163,6 +165,8 @@ class SvMgaSequencer:
             solver_name=self.config.solver_name,
             silent=self.config.silent,
             solver_suffixes=suffixes,
+            solver_options=self.config.solver_options,
+            mip_solver_options=self.config.mip_solver_options,
         )
         status = res.solver.termination_condition
         logger.debug('Termination condition: %s', status.name)

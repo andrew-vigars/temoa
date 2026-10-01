@@ -80,7 +80,11 @@ def evaluate(
         extensions=config.extensions,
     )
     mdl, res = run_actions.solve_instance(
-        instance=instance, solver_name=config.solver_name, silent=True
+        instance=instance,
+        solver_name=config.solver_name,
+        silent=True,
+        solver_options=config.solver_options,
+        mip_solver_options=config.mip_solver_options,
     )
     status = run_actions.check_solve_status(res)
     if not status:

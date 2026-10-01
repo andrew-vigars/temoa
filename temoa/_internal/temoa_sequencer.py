@@ -254,6 +254,8 @@ class TemoaSequencer:
                 self.config.solver_name,
                 silent=self.config.silent,
                 solver_suffixes=suffixes,
+                solver_options=self.config.solver_options,
+                mip_solver_options=self.config.mip_solver_options,
             )
             good_solve, msg = check_solve_status(self.pf_results)
             if not good_solve:

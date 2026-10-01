@@ -3,7 +3,7 @@ Basic-level atomic functions that can be used by a sequencer, as needed
 """
 
 import sqlite3
-from collections.abc import Generator, Iterable
+from collections.abc import Generator, Iterable, Mapping
 from contextlib import contextmanager
 from logging import getLogger
 from pathlib import Path
@@ -174,6 +174,8 @@ def solve_instance(
     solver_name: str,
     silent: bool = False,
     solver_suffixes: Iterable[str] | None = None,
+    solver_options: Mapping[str, object] | None = None,
+    mip_solver_options: Mapping[str, object] | None = None,
 ) -> tuple[TemoaModel, SolverResults]:
     """
     Solve the instance and return a loaded instance
@@ -181,6 +183,8 @@ def solve_instance(
     'duals' is supported in the Temoa Framework.  Some solvers may not support duals.
     :param silent: Run silently
     :param solver_name: The name of the solver to request from the SolverFactory
+    :param solver_options: User-configured continuous/default solver options
+    :param mip_solver_options: User-configured options used for a detected MIP
     :param instance: the instance to solve
     :return: loaded instance
     """
@@ -203,6 +207,7 @@ def solve_instance(
         raise NotImplementedError('Neos based solve is not currently supported')
 
     # Solver Configuration
+    active_solver_options = solver_options
     if solver_name == 'cbc':
         pass
 
@@ -215,15 +220,34 @@ def solve_instance(
         optimizer.options['feasopt tolerance'] = 1.0e-4
 
     elif solver_name == 'gurobi':
-        # Note: these parameter values match mip-dev / PyPSA (see: https://pypsa-eur.readthedocs.io/en/latest/configuration.html)
-        optimizer.options['Method'] = 2  # barrier
-        optimizer.options['Crossover'] = 0  # non basic solution, ie no crossover
-        optimizer.options['BarConvTol'] = 1.0e-3
-        optimizer.options['FeasibilityTol'] = 1.0e-4
-        optimizer.options['BarOrder'] = -1  # auto ordering; 2-4x faster than AMD on large models
+        has_integer_variables = any(
+            not variable.fixed and (variable.is_binary() or variable.is_integer())
+            for variable in instance.component_data_objects(ctype=Var, active=True)
+        )
+        if has_integer_variables:
+            # Gurobi parameter reference:
+            # https://docs.gurobi.com/projects/optimizer/en/current/reference/parameters.html
+            # Automatic algorithms are better suited to MIP root and node relaxations than the
+            # continuous-LP barrier profile below. MIPGap uses Gurobi's default value.
+            optimizer.options['Method'] = -1
+            optimizer.options['Crossover'] = -1
+            optimizer.options['MIPGap'] = 1.0e-4
+            active_solver_options = mip_solver_options
+        else:
+            # Note: these parameter values match mip-dev / PyPSA (see: https://pypsa-eur.readthedocs.io/en/latest/configuration.html)
+            optimizer.options['Method'] = 2  # barrier
+            optimizer.options['Crossover'] = 0  # non basic solution, ie no crossover
+            optimizer.options['BarConvTol'] = 1.0e-3
+            optimizer.options['FeasibilityTol'] = 1.0e-4
+            # Auto ordering; 2-4x faster than AMD on large models.
+            optimizer.options['BarOrder'] = -1
 
     elif solver_name == 'appsi_highs':
         pass
+
+    # Explicit configuration takes precedence over Temoa's solver defaults.
+    if active_solver_options:
+        optimizer.options.update(active_solver_options)
 
     # Suffix Handling
     solver_suffixes_list: list[str] = []

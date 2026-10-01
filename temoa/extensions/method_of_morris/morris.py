@@ -40,7 +40,12 @@ def evaluate(
 
     dp = DataPortal(data_dict={None: data})
     instance = run_actions.build_instance(loaded_portal=dp, extensions=config.extensions)
-    mdl, res = run_actions.solve_instance(instance=instance, solver_name=config.solver_name)
+    mdl, res = run_actions.solve_instance(
+        instance=instance,
+        solver_name=config.solver_name,
+        solver_options=config.solver_options,
+        mip_solver_options=config.mip_solver_options,
+    )
     status = run_actions.check_solve_status(res)
     if not status:
         raise RuntimeError('Bad solve during Method of Morris')
