@@ -50,19 +50,19 @@ def gather_group_regions(model: TemoaModel, region: Region) -> Iterable[Region]:
 
 
 def create_regional_indices(model: TemoaModel) -> list[Region]:
-    """Create the set of all regions and all region-region pairs"""
-    regional_indices: set[Region] = set()
-    for r_i in model.regions:
-        if '-' in r_i:
-            logger.error("Individual region names can not have '-' in their names: %s", str(r_i))
-            raise ValueError("Individual region names can not have '-' in their names: " + str(r_i))
-        for r_j in model.regions:
-            if r_i == r_j:
-                regional_indices.add(r_i)
-            else:
-                regional_indices.add(cast('Region', r_i + '-' + r_j))
-    # dev note:  Sorting these passed them to pyomo in an ordered container and prevents warnings
-    return sorted(regional_indices)
+    """Create the sparse set of individual and linked-region process indices.
+
+    The hybrid loader normally provides this set directly from observed process
+    data.  This initializer retains the same sparse behavior for callers that
+    construct model data themselves.  Avoiding the full ordered Cartesian
+    product is important because that dense product grows quadratically even
+    when only a small fraction of region pairs is used by the model.
+    """
+    return sorted(
+        region
+        for region in model.regional_global_indices
+        if region in model.regions or '-' in region
+    )
 
 
 @deprecated('No longer used.  See the region_group_check in validators.py')

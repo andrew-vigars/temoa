@@ -247,10 +247,10 @@ class TemoaModel(AbstractModel):
 
         # Define regions
         self.regions = Set(validate=region_check)
-        # regional_indices is the set of all the possible combinations of interregional exchanges
-        # plus original region indices. If tech_exchange is empty, RegionalIndices =regions.
-        self.regional_indices = Set(initialize=geography.create_regional_indices)
+        # Regional/global indices are loaded from observed model data.  Declare them before
+        # regional_indices so the latter can select only actual individual and linked regions.
         self.regional_global_indices = Set(validate=region_group_check)
+        self.regional_indices = Set(initialize=geography.create_regional_indices)
 
         # Define technology-related sets
         # M.tech_resource = Set() # not actually used by

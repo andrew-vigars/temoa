@@ -109,6 +109,18 @@ def initialize_cost_invest_eos(model: EOSModel) -> None:
                 logger.error(msg)
                 raise ValueError(msg)
 
+    # Cache the preceding EOS period for each cluster.  Looking this up by scanning
+    # cost_invest_eos_period_rpt inside period_cost is quadratic in the number of
+    # clusters, which is prohibitive for spatial models with many EOS curves.
+    periods_by_cluster: dict[tuple[Region, Technology], set[Period]] = {}
+    for r, p, t in model.cost_invest_eos_period_rpt:
+        periods_by_cluster.setdefault((r, t), set()).add(p)
+    for (r, t), periods in periods_by_cluster.items():
+        previous_period: Period | None = None
+        for p in sorted(periods):
+            model.cost_invest_eos_previous_period[r, p, t] = previous_period
+            previous_period = p
+
     # Shortens some lines below in error checks
     life = model.lifetime_process
     loan_life = model.loan_lifetime_process
@@ -386,13 +398,10 @@ def period_cost(model: EOSModel, r: Region, p: Period, t: Technology) -> Express
     prev_cum_cost: ExprLike = 0.0
 
     # Subtract previously accumulated investment costs to get the incremental for discounting
-    prev_periods = {
-        _p for _r, _p, _t in model.cost_invest_eos_period_rpt if _r == r and _t == t and _p < p
-    }
-    if len(prev_periods) > 0:
+    previous_period = model.cost_invest_eos_previous_period[r, p, t]
+    if previous_period is not None:
         # Endogenous previous cumulative investment costs to subtract
-        p_prev = max(prev_periods)
-        prev_cum_cost = cost_invest_eos_cluster_cumulative_cost(model, r, p_prev, t)
+        prev_cum_cost = cost_invest_eos_cluster_cumulative_cost(model, r, previous_period, t)
     else:
         # Existing capacity costs to subtract (needed for myopic)
         regions = geography.gather_group_regions(model, r)

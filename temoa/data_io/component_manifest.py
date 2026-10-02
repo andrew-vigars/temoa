@@ -48,6 +48,13 @@ def build_manifest(model: TemoaModel, extension_ids: Sequence[str] | None = None
             is_period_filtered=False,
         ),
         LoadItem(
+            component=model.regional_indices,
+            table='region',  # Placeholder, custom loader does the work
+            columns=['region'],
+            custom_loader_name='_load_regional_indices',
+            is_period_filtered=False,
+        ),
+        LoadItem(
             component=model.regional_global_indices,
             table='meta_regional_groups',  # Placeholder, custom loader does the work
             columns=['region_or_group'],

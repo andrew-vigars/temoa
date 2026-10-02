@@ -38,6 +38,9 @@ if TYPE_CHECKING:
         cost_invest_eos_reference_process: dict[
             tuple[Region, Period, Technology], tuple[Region, Technology]
         ]
+        cost_invest_eos_previous_period: dict[
+            tuple[Region, Period, Technology], Period | None
+        ]
         cost_fixed_eos_segments: dict[tuple[Region, Period, Technology], set[int]]
         cost_variable_eos_segments: dict[tuple[Region, Period, Technology], set[int]]
 
@@ -93,6 +96,7 @@ def register_early_eos_components(model: TemoaModel) -> None:
 
     m.cost_invest_eos_segments = {}
     m.cost_invest_eos_reference_process = {}
+    m.cost_invest_eos_previous_period = {}
 
     m.cost_invest_eos_segment_rptn = Set(
         dimen=4, initialize=cost_invest_eos.cost_invest_eos_cumulative_capacity_indices

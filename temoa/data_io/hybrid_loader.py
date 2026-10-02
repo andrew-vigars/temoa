@@ -527,6 +527,44 @@ class HybridLoader:
     # =================================================================================
 
     # --- Core Model Structure ---
+    def _load_regional_indices(
+        self,
+        data: dict[str, object],
+        raw_data: Sequence[tuple[object, ...]],
+        filtered_data: Sequence[tuple[object, ...]],
+    ) -> None:
+        """Load only individual regions and observed linked-region indices."""
+        model = self.model
+        cur = self.con.cursor()
+        regions = {
+            cast('str', row[0])
+            for row in cur.execute('SELECT region FROM main.region').fetchall()
+        }
+        observed_indices = {
+            cast('str', row[0]) for row in self.efficiency_values
+        }
+
+        for table, field_name in self.tables_with_regional_groups.items():
+            if self.table_exists(table):
+                observed_indices.update(
+                    cast('str', row[0])
+                    for row in cur.execute(f'SELECT {field_name} FROM main.{table}').fetchall()
+                    if row[0] is not None
+                )
+
+        def is_linked_region(index: str) -> bool:
+            if index.count('-') != 1:
+                return False
+            region_from, region_to = index.split('-')
+            return region_from != region_to and {region_from, region_to} <= regions
+
+        regional_indices = regions | {
+            index for index in observed_indices if is_linked_region(index)
+        }
+        self._load_component_data(
+            data, model.regional_indices, sorted((index,) for index in regional_indices)
+        )
+
     def _load_regional_global_indices(
         self,
         data: dict[str, object],
@@ -534,7 +572,7 @@ class HybridLoader:
         filtered_data: Sequence[tuple[object, ...]],
     ) -> None:
         """
-        Aggregates region and group names from the Region table and all Limit tables.
+        Aggregate region and group names used by core and extension limit data.
         """
         model = self.model
         cur = self.con.cursor()
