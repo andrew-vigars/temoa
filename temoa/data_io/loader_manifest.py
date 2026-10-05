@@ -39,6 +39,7 @@ class LoadItem:
         validation_map: A tuple indicating which column indices in the data
             correspond to the elements needing validation (e.g., region, tech).
         where_clause: Optional. An SQL `WHERE` clause to apply when querying.
+        distinct: If True, select only distinct database rows.
         is_period_filtered: If True, the loader automatically adds a `WHERE`
             clause to filter by the active periods in a myopic run.
         is_table_required: If True, the loader will raise an error if the
@@ -59,6 +60,7 @@ class LoadItem:
     validator_name: str | None = None
     validation_map: tuple[int, ...] = field(default_factory=tuple)
     where_clause: str | None = None
+    distinct: bool = False
     is_period_filtered: bool = True
     is_table_required: bool = True
     custom_loader_name: str | None = None

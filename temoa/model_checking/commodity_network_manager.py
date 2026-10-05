@@ -139,6 +139,7 @@ class CommodityNetworkManager:
                     (edge_tuple.region, edge_tuple.input_comm, edge_tuple.vintage)
                 )
                 valid_elements['t'].add(edge_tuple.tech)
+                valid_elements['r'].add(edge_tuple.region)
                 valid_elements['v'].add(edge_tuple.vintage)
                 valid_elements['ic'].add(edge_tuple.input_comm)
                 valid_elements['oc'].add(edge_tuple.output_comm)
@@ -178,6 +179,7 @@ class CommodityNetworkManager:
             valid_elements['rtv'].add((r, t, v))
             valid_elements['rt'].add((r, t))
             valid_elements['t'].add(t)
+            valid_elements['r'].add(r)
             valid_elements['v'].add(v)
 
             if cast('int', p) == cast('int', v):
@@ -229,6 +231,7 @@ class CommodityNetworkManager:
                 exception_loc=0,
                 exception_vals=ViableSet.REGION_REGEXES,
             ),
+            'r': ViableSet(elements=valid_elements['r']),
             't': ViableSet(elements=valid_elements['t']),
             'v': ViableSet(elements=valid_elements['v']),
             'ic': ViableSet(elements=valid_elements['ic']),

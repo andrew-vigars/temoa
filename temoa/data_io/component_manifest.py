@@ -49,9 +49,11 @@ def build_manifest(model: TemoaModel, extension_ids: Sequence[str] | None = None
         ),
         LoadItem(
             component=model.regional_indices,
-            table='region',  # Placeholder, custom loader does the work
+            table='efficiency',
             columns=['region'],
-            custom_loader_name='_load_regional_indices',
+            validator_name='viable_regions',
+            validation_map=(0,),
+            distinct=True,
             is_period_filtered=False,
         ),
         LoadItem(

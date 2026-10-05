@@ -45,6 +45,7 @@ from temoa.model_checking.validators import (
     no_slash_or_pipe,
     region_check,
     region_group_check,
+    regional_index_check,
     validate_0to1,
     validate_efficiency,
     validate_linked_tech,
@@ -247,10 +248,10 @@ class TemoaModel(AbstractModel):
 
         # Define regions
         self.regions = Set(validate=region_check)
-        # Regional/global indices are loaded from observed model data.  Declare them before
-        # regional_indices so the latter can select only actual individual and linked regions.
+        # Process regions come directly from efficiency data; regional/global indices also
+        # include the region groups used by aggregate constraints.
+        self.regional_indices = Set(validate=regional_index_check)
         self.regional_global_indices = Set(validate=region_group_check)
-        self.regional_indices = Set(initialize=geography.create_regional_indices)
 
         # Define technology-related sets
         # M.tech_resource = Set() # not actually used by

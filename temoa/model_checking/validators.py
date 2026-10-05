@@ -34,6 +34,7 @@ logger = getLogger(__name__)
 # ============================================================================
 __all__ = [
     'no_slash_or_pipe',
+    'regional_index_check',
     'region_check',
     'region_group_check',
     'validate_0to1',
@@ -146,6 +147,11 @@ def linked_region_check(model: TemoaModel, region_pair: str) -> bool:
         ):  # both captured regions are in the set of M.R
             return True
     return False
+
+
+def regional_index_check(model: TemoaModel, region: Region) -> bool:
+    """Validate a process region as either a region or one directed region pair."""
+    return region in model.regions or linked_region_check(model, region)
 
 
 def region_group_check(model: TemoaModel, rg: str) -> bool:

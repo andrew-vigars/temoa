@@ -35,7 +35,7 @@ The sets in the table below define Temoa's representation of **regions**.
    :widths: 15, 20, 25, 40
 
    ":math:`\text{R}`", ":code:`region`", ":code:`regions`", "distinct geographical regions"
-   "", ":code:`region`", ":code:`regional_indices`", "set of all the possible combinations of interregional exchanges plus original region indices"
+   "", ":code:`efficiency`", ":code:`regional_indices`", "single-region and interregional process indices observed in efficiency data"
    "", "", ":code:`regional_global_indices`", "set of all used combinations of interregional exchanges plus original region indices and groups"
 
 The sets below define how technologies are represented within Temoa. Because technologies

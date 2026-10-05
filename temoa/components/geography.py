@@ -49,22 +49,6 @@ def gather_group_regions(model: TemoaModel, region: Region) -> Iterable[Region]:
 # ============================================================================
 
 
-def create_regional_indices(model: TemoaModel) -> list[Region]:
-    """Create the sparse set of individual and linked-region process indices.
-
-    The hybrid loader normally provides this set directly from observed process
-    data.  This initializer retains the same sparse behavior for callers that
-    construct model data themselves.  Avoiding the full ordered Cartesian
-    product is important because that dense product grows quadratically even
-    when only a small fraction of region pairs is used by the model.
-    """
-    return sorted(
-        region
-        for region in model.regional_global_indices
-        if region in model.regions or '-' in region
-    )
-
-
 @deprecated('No longer used.  See the region_group_check in validators.py')
 def regional_global_initialized_indices(model: TemoaModel) -> set[Region]:
     from itertools import permutations
