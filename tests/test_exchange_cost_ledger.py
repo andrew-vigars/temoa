@@ -124,3 +124,40 @@ def test_cost_allocation(fake_model: Namespace, costs: dict[str, Any]) -> None:
         entries[TEST_REGION_B, TEST_PERIOD_2000, TEST_TECH_T1, TEST_VINTAGE_2000][CostType.FIXED]
         == costs['B_cost']
     ), "costs didn't match"
+
+
+def test_cost_allocation_sums_multiple_corridors_for_one_region(
+    fake_model: Namespace, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Costs from multiple corridors must accumulate in their shared regional row."""
+    ledger = ExchangeTechCostLedger(fake_model)
+    monkeypatch.setattr(ledger, 'get_use_ratio', lambda *args: 0.5)
+
+    ledger.add_cost_record(
+        cast('Region', 'A-B'),
+        TEST_PERIOD_2000,
+        TEST_TECH_T1,
+        TEST_VINTAGE_2000,
+        100.0,
+        CostType.FIXED,
+    )
+    ledger.add_cost_record(
+        cast('Region', 'A-C'),
+        TEST_PERIOD_2000,
+        TEST_TECH_T1,
+        TEST_VINTAGE_2000,
+        200.0,
+        CostType.FIXED,
+    )
+
+    entries = ledger.get_entries()
+
+    assert entries[TEST_REGION_A, TEST_PERIOD_2000, TEST_TECH_T1, TEST_VINTAGE_2000][
+        CostType.FIXED
+    ] == pytest.approx(150.0)
+    assert entries[TEST_REGION_B, TEST_PERIOD_2000, TEST_TECH_T1, TEST_VINTAGE_2000][
+        CostType.FIXED
+    ] == pytest.approx(50.0)
+    assert entries[cast('Region', 'C'), TEST_PERIOD_2000, TEST_TECH_T1, TEST_VINTAGE_2000][
+        CostType.FIXED
+    ] == pytest.approx(100.0)

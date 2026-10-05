@@ -135,6 +135,19 @@ class ExchangeTechCostLedger:
         region_costs: dict[tuple[Region, Period, Technology, Vintage], dict[CostType, float]] = (
             defaultdict(dict)
         )
+
+        def add_region_cost(
+            region: Region,
+            period: Period,
+            tech: Technology,
+            vintage: Vintage,
+            cost_type: CostType,
+            cost: float,
+        ) -> None:
+            """Accumulate corridor costs that collapse onto one regional output row."""
+            entry = region_costs[region, period, tech, vintage]
+            entry[cost_type] = entry.get(cost_type, 0.0) + cost
+
         # iterate through each region pairing, pull the cost records and decide if/how to split
         # each one
         for cost_type in self.cost_records:
@@ -147,15 +160,13 @@ class ExchangeTechCostLedger:
                 if (
                     partner_cost
                 ):  # they are both entered, so we just record the costs... no splitting
-                    region_costs[r2, period, tech, vintage].update({cost_type: cost})
-                    region_costs[r1, period, tech, vintage].update({cost_type: partner_cost})
+                    add_region_cost(r2, period, tech, vintage, cost_type, cost)
+                    add_region_cost(r1, period, tech, vintage, cost_type, partner_cost)
                 else:
                     # only one side had costs: the signal to split based on use
                     use_ratio = self.get_use_ratio(r1, r2, period, tech, vintage)
                     # not r2 is the "importer" and that is the ratio assignment
-                    region_costs[r1, period, tech, vintage].update(
-                        {cost_type: cost * (1.0 - use_ratio)}
-                    )
-                    region_costs[r2, period, tech, vintage].update({cost_type: cost * use_ratio})
+                    add_region_cost(r1, period, tech, vintage, cost_type, cost * (1.0 - use_ratio))
+                    add_region_cost(r2, period, tech, vintage, cost_type, cost * use_ratio)
 
         return region_costs
